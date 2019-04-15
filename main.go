@@ -34,15 +34,13 @@ type Consumption struct {
 	Phaseshift float64 `json:"phaseshift"`
 	Status     int     `json:"status"`
 }
-
-var URL string = "http://solaraa.advancedlogic.co/api/v1/plugs/112233445566/owners/2052/consumption"
+var DEVICE_ID = "111111111111"
+var URL string = "http://solaraa.advancedlogic.co/api/v1/plugs/"+ DEVICE_ID + "/owners/2052/consumption"
 var RETRY_ON_FAIL int = 5
 
 func sendToServer(c *Consumption) bool {
 	fmt.Println("send: ", c)
 	tr := &http.Transport{
-		MaxIdleConns:       10,
-		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: true,
 	}
 	client := &http.Client{Transport: tr}
