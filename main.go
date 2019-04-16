@@ -34,7 +34,9 @@ type Consumption struct {
 	Phaseshift float64 `json:"phaseshift"`
 	Status     int     `json:"status"`
 }
-var DEVICE_ID = "111111111111"
+
+var OWNER_ID string = "2052"
+var DEVICE_ID string = "111111111111"
 var URL string = "http://solaraa.advancedlogic.co/api/v1/plugs/"+ DEVICE_ID + "/owners/2052/consumption"
 var RETRY_ON_FAIL int = 5
 
@@ -73,11 +75,16 @@ func sendToServer(c *Consumption) bool {
 
 func main() {
 
-	if len(os.Args) == 1 {
-		fmt.Println("err: Required csv filename")
+	if len(os.Args) != 4 {
+		fmt.Println("solarlaa-simulator <ownerid> <deviceid> <csv file>")
+		return
 	}
 
-	f := os.Args[1]
+	OWNER_ID = os.Args[1]
+	DEVICE_ID = os.Args[2]
+	f := os.Args[3]
+	
+	URL = "http://solaraa.advancedlogic.co/api/v1/plugs/"+ DEVICE_ID + "/owners/" + OWNER_ID +"/consumption"
 
 	csvFile, _ := os.Open(f)
 	bread := bufio.NewReader(csvFile)
@@ -106,9 +113,10 @@ func main() {
 		I, _ := strconv.ParseFloat(line[4], 64)
 		var T string
 		if line[1] != "" && line[1] == "24.00" {
-			d, _ := time.Parse("2006-01-02", line[0])
-			d = d.AddDate(0, 0, 1)
-			T = d.Format("2006-01-02") + " 00:00:00"
+		//	d, _ := time.Parse("2006-01-02", line[0])
+		//	d = d.AddDate(0, 0, 1)
+		//	T = d.Format("2006-01-02") + " 00:00:00"
+			T = line[0] + " 23:59:59"
 		} else {
 			T = line[0] + " " + strings.Replace(line[1], ".", ":", 1) + ":00"
 		}
