@@ -50,14 +50,14 @@ func sendToServer(c *Consumption) bool {
 	jstr, err := json.Marshal(*c)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		return false
 	}
 
 	resp, err := client.Post(URL, "application/json", bytes.NewBuffer(jstr))
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		return false
 	}
 
@@ -132,16 +132,18 @@ func main() {
 		clist = append(clist, nc)
 	}
 
-	for _, v := range clist {
-		c := time.Tick(50 * time.Millisecond)
-		<-c
-		for i := 0; i < RETRY_ON_FAIL; i++ {
-			if sendToServer(&v) == true {
-				break
-			} else {
-				fmt.Println("Retry send:", v)
+	for k, v := range clist {
+		fmt.Println(k)
+		if k != 0 {
+			c := time.Tick(50 * time.Millisecond)
+			<-c
+			for i := 0; i < RETRY_ON_FAIL; i++ {
+				if sendToServer(&v) == true {
+					break
+				} else {
+					fmt.Println("Retry send:", v)
+				}
 			}
 		}
 	}
-
 }
