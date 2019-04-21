@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 /*
@@ -37,7 +36,7 @@ type Consumption struct {
 
 var OWNER_ID string = "2052"
 var DEVICE_ID string = "111111111111"
-var URL string = "http://solaraa.advancedlogic.co/api/v1/plugs/"+ DEVICE_ID + "/owners/2052/consumption"
+var URL string = "http://solaraa.advancedlogic.co/api/v1/plugs/" + DEVICE_ID + "/owners/2052/consumption"
 var RETRY_ON_FAIL int = 5
 
 func sendToServer(c *Consumption) bool {
@@ -75,16 +74,17 @@ func sendToServer(c *Consumption) bool {
 
 func main() {
 
-	if len(os.Args) != 4 {
-		fmt.Println("solarlaa-simulator <ownerid> <deviceid> <csv file>")
+	if len(os.Args) != 5 {
+		fmt.Println("solarlaa-simulator <ownerid> <deviceid> <csv file> <line number>")
 		return
 	}
 
 	OWNER_ID = os.Args[1]
 	DEVICE_ID = os.Args[2]
 	f := os.Args[3]
-	
-	URL = "http://solaraa.advancedlogic.co/api/v1/plugs/"+ DEVICE_ID + "/owners/" + OWNER_ID +"/consumption"
+	l_num, _ := strconv.Atoi(os.Args[4])
+
+	URL = "http://solaraa.advancedlogic.co/api/v1/plugs/" + DEVICE_ID + "/owners/" + OWNER_ID + "/consumption"
 
 	csvFile, _ := os.Open(f)
 	bread := bufio.NewReader(csvFile)
@@ -102,23 +102,27 @@ func main() {
 
 		//fmt.Println(line)
 
-		if len(line) != 5 {
+		if len(line) != 10 {
 			fmt.Println("Err: invalid data")
 			break
 		}
 
 		//Convert data to slice
-		P, _ := strconv.ParseFloat(line[2], 64)
-		V, _ := strconv.ParseFloat(line[3], 64)
-		I, _ := strconv.ParseFloat(line[4], 64)
+		P, _ := strconv.ParseFloat(line[9], 64)
+		V := 0.0
+		I := 0.0
+
 		var T string
-		if line[1] != "" && line[1] == "24.00" {
-		//	d, _ := time.Parse("2006-01-02", line[0])
-		//	d = d.AddDate(0, 0, 1)
-		//	T = d.Format("2006-01-02") + " 00:00:00"
-			T = line[0] + " 23:59:59"
+
+		dt := line[2]
+		dt_strs := strings.Split(dt, " ")
+
+		if len(dt_strs) == 2 {
+			T = dt
+		} else if len(dt_strs) == 1 {
+			T = dt + " 00:00:00"
 		} else {
-			T = line[0] + " " + strings.Replace(line[1], ".", ":", 1) + ":00"
+			log.Fatal("Invalid datetime format: " + dt)
 		}
 
 		nc := Consumption{
@@ -133,10 +137,10 @@ func main() {
 	}
 
 	for k, v := range clist {
-		fmt.Println(k)
-		if k != 0 {
-			c := time.Tick(50 * time.Millisecond)
-			<-c
+		fmt.Println("line: ", k, v)
+		if k != 0 && k >= l_num {
+			//c := time.Tick(2 * time.Millisecond)
+			//<-c
 			for i := 0; i < RETRY_ON_FAIL; i++ {
 				if sendToServer(&v) == true {
 					break
